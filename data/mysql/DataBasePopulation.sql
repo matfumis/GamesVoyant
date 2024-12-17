@@ -1,4 +1,4 @@
-use gamesvoyantdb;
+use GamesVoyantDB;
 
 CALL CreateUser(
     'alice',

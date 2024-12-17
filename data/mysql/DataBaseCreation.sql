@@ -262,3 +262,19 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE SearchUser(
+    IN p_search_query VARCHAR(20)
+)
+BEGIN
+    SELECT user_id, username, name, surname, nationality, date_of_birth
+    FROM Users
+    WHERE username LIKE CONCAT('%', p_search_query, '%')
+       OR name LIKE CONCAT('%', p_search_query, '%')
+       OR surname LIKE CONCAT('%', p_search_query, '%');
+END$$
+
+DELIMITER ;
+
