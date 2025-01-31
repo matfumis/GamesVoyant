@@ -33,7 +33,7 @@ def decode_jwt_token(token):
 
 
 def main():
-    st.set_page_config(page_title="Videogames Suggestion", layout="wide")
+    st.set_page_config(page_title="GamesVoyant", layout="wide")
 
     # 2) Create (or load) an EncryptedCookieManager
     #    The prefix and password can be customized or read from environment variables.
@@ -64,6 +64,10 @@ def main():
 
     # 5) If not authenticated, show login/signup tabs
     if not st.session_state.authenticated:
+
+        st.title("GamesVoyant :crystal_ball::space_invader:")
+        st.header("A world of endless adventures awaits you...")
+
         tab_login, tab_signup = st.tabs(["Log In", "Sign Up"])
         
         # === LOGIN TAB ===
