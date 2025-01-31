@@ -9,16 +9,13 @@ import personal_area
 import search_users
 import search_games
 
-# === CONFIGURE YOUR SECRET KEY HERE ===
-# In production, keep this secret safe (e.g., in environment variables).
 SECRET_KEY = "YOUR_SUPER_SECRET_KEY"
 
-# 1) Functions to generate & decode JWT tokens
 def generate_jwt_token(user_dict, expires_minutes=1440):
     expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=expires_minutes)
     payload = {
         "exp": expiry,
-        "user": user_dict,  # embed your user object
+        "user": user_dict,  
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return token
@@ -35,34 +32,26 @@ def decode_jwt_token(token):
 def main():
     st.set_page_config(page_title="GamesVoyant", layout="wide")
 
-    # 2) Create (or load) an EncryptedCookieManager
-    #    The prefix and password can be customized or read from environment variables.
     cookies = EncryptedCookieManager(prefix="gamesvoyant_", password="CHANGE_ME")  
     if not cookies.ready():
-        # If cookies are not ready, stop execution to load them
         st.stop()
 
-    # 3) Try to read the JWT token from the cookies on every run
     token_from_cookie = cookies.get("auth_token")
     if token_from_cookie:
         payload = decode_jwt_token(token_from_cookie)
         if payload is not None:
-            # Token is valid -> user is considered authenticated
             if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
                 st.session_state["authenticated"] = True
                 st.session_state["user"] = payload["user"]
         else:
-            # Token invalid or expired -> remove it
             cookies["auth_token"] = ""
             cookies.save()
 
-    # 4) Initialize session state if missing
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "user" not in st.session_state:
         st.session_state.user = None
 
-    # 5) If not authenticated, show login/signup tabs
     if not st.session_state.authenticated:
 
         st.title("GamesVoyant :crystal_ball::space_invader:")
@@ -79,21 +68,18 @@ def main():
             if st.button("Log In"):
                 user = login_user(username_login, password_login)
                 if user:
-                    # Mark session as authenticated
                     st.session_state.authenticated = True
                     st.session_state.user = {
                         "user_id": user["user_id"],
                         "username": user["username"],
                         "name": user["name"],
-                        # Add more fields if needed...
                     }
 
-                    # === Generate JWT and store in the cookie ===
                     token = generate_jwt_token(st.session_state.user, expires_minutes=1440)
                     cookies["auth_token"] = token
                     cookies.save()
 
-                    st.rerun() # Reload the page to reflect changes
+                    st.rerun() 
                 else:
                     st.error("Invalid username or password")
         
@@ -125,7 +111,6 @@ def main():
                 else:
                     st.error("Passwords do not match!")
     
-    # 6) If the user is authenticated, show the main content and sidebar
     else:
         st.title("GamesVoyant :crystal_ball::space_invader:")
         
@@ -144,7 +129,6 @@ def main():
             st.session_state.authenticated = False
             st.session_state.user = None
 
-            # Clear the cookie
             cookies["auth_token"] = ""
             cookies.save()
 
