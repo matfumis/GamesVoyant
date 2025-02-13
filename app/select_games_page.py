@@ -17,7 +17,6 @@ def show_select_games():
     for idx, row in df_games.iterrows():
         col = cols[idx % 2]
         with col:
-            # Display a placeholder image.
             st.image("https://via.placeholder.com/150", width=150)
             st.subheader(row["Name"])
             st.caption(f"Release: {row['Release date']}")
