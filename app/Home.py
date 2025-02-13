@@ -6,6 +6,9 @@ import jwt
 from streamlit_cookies_manager import EncryptedCookieManager
 from auth.authentication import login_user, signup_user
 from css.custom_css import hide_sidebar
+from select_games_page import show_select_games
+from database import *
+
 
 SECRET_KEY = "YOUR_SUPER_SECRET_KEY"
 
@@ -26,12 +29,10 @@ def decode_jwt_token(token):
         return None
 
 def main():
-
     cookies = EncryptedCookieManager(prefix="gamesvoyant_", password="CHANGE_ME")
     if not cookies.ready():
         st.stop()
 
-    # Verifica se esiste un token di autenticazione salvato nei cookie
     token_from_cookie = cookies.get("auth_token")
     if token_from_cookie:
         payload = decode_jwt_token(token_from_cookie)
@@ -48,6 +49,20 @@ def main():
     if "user" not in st.session_state:
         st.session_state.user = None
 
+    if "show_select_games" not in st.session_state:
+        st.session_state.show_select_games = False
+
+    # -------------------------------------------------------------
+    # 1) If the user is supposed to see the game selection page...
+    # -------------------------------------------------------------
+    if st.session_state.show_select_games:
+        hide_sidebar()
+        show_select_games()
+        return 
+
+    # -------------------------------------------------------------
+    # 2) Otherwise, check if user is authenticated
+    # -------------------------------------------------------------
     if not st.session_state.authenticated:
         hide_sidebar()
         st.title("GamesVoyant :crystal_ball::space_invader:")
@@ -98,13 +113,25 @@ def main():
                     )
                     if success:
                         st.success(msg)
+                        user = get_user_by_username(username_signup)
+                        if user:
+                            st.session_state.user = user
+                            st.session_state.authenticated = True
+                        else:
+                            st.error("Error retrieving user information. Please try logging in.")
+                            st.stop()
+
+                        st.session_state.show_select_games = True
+                        st.rerun()
                     else:
                         st.error(msg)
                 else:
                     st.error("Passwords do not match!")
     else:
+        # -------------------------------------------------------------
+        # 3) The user is authenticated and not in 'show_select_games' flow
+        # -------------------------------------------------------------
         st.title("GamesVoyant :crystal_ball::space_invader:")
-
         if st.sidebar.button("Logout"):
             st.session_state.authenticated = False
             st.session_state.user = None
@@ -113,7 +140,7 @@ def main():
             st.rerun()
 
         st.sidebar.info(f"Logged in as: {st.session_state.user['username']}")
-        st.write("Seleziona una pagina dalla sidebar a sinistra.")
+        st.write("Hi")
 
 if __name__ == "__main__":
     main()
