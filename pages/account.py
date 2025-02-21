@@ -1,14 +1,27 @@
 import streamlit as st
-from modules.auth import get_current_user
+from modules.auth import *
 
 user = get_current_user()
-if not user:
-    st.error("Non sei autenticato. Effettua il login.")
-    st.stop()
+if user is None:
+    st.switch_page("app.py")
+    stop()
 
-st.title("Area Personale")
+st.title("Personal Area")
+
+# sidebar custom, serve per nascondere authentication.py e app.py a cui l'utente di fatto non serve mai accedere.
+# Si aggiungono solo le pagine a cui l'utente può accedere
+st.sidebar.page_link('pages/home.py', label='Home')
+st.sidebar.page_link('pages/account.py', label='Personal Area')
+with st.sidebar:
+    st.write("")
+    st.write("")
+    st.info(f"Logged in as: {user['username']}")
+    if st.button("Logout"):
+        logout()
+        st.switch_page("app.py")
+
 st.write(f"**Username:** {user['username']}")
-st.write(f"**Nome:** {user['name']}")
-st.write(f"**Cognome:** {user['surname']}")
-st.write(f"**Nazionalità:** {user['nationality']}")
-st.write(f"**Data di nascita:** {user['date_of_birth']}")
+st.write(f"**Name:** {user['name']}")
+st.write(f"**Surname:** {user['surname']}")
+
+st.write(user)
