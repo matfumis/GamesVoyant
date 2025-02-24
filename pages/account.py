@@ -1,5 +1,6 @@
 import streamlit as st
 from modules.auth import *
+import pandas as pd
 
 user = get_current_user()
 if user is None:
@@ -20,8 +21,15 @@ with st.sidebar:
         logout()
         st.switch_page("app.py")
 
-st.write(f"**Username:** {user['username']}")
-st.write(f"**Name:** {user['name']}")
-st.write(f"**Surname:** {user['surname']}")
+st.header(f"Welcome, {user['username']}")
 
-st.write(user)
+st.markdown("---")
+
+st.header("Your saved games")
+st.write(user['saved_games'])
+
+st.markdown("---")
+
+st.header("Followed users")
+
+
