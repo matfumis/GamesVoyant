@@ -1,6 +1,7 @@
 import streamlit as st
 import bcrypt
-from modules import database  
+from modules import database
+
 
 def register(username, password, name, surname, nationality, date_of_birth):
     if database.get_user(username) is not None:
@@ -17,6 +18,7 @@ def register(username, password, name, surname, nationality, date_of_birth):
         st.error(f"Error during registration: {e}")
         return False
 
+
 def login(username, password):
     user = database.get_user(username)
     if user is None:
@@ -32,8 +34,10 @@ def login(username, password):
         st.error("Incorrect password")
         return False
 
+
 def logout():
     st.session_state.user = None
+
 
 def get_current_user():
     return st.session_state.get("user", None)

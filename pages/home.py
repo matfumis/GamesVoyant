@@ -1,11 +1,11 @@
-import streamlit as st
-from modules.auth import get_current_user, logout
+from modules.auth import *
+from modules.recommender import *
+from modules.utils import *
 
 # Controlla subito se l'utente è autenticato; se non lo è, redireziona subito all'entry point dell'app
 user = get_current_user()
 if user is None:
     st.switch_page("app.py")
-    stop()
 
 st.title("Home")
 
@@ -20,6 +20,21 @@ with st.sidebar:
     if st.button("Logout"):
         logout()
         st.switch_page("app.py")
-
-
+'''
 st.header("A bunch of games that you may like:")
+
+current_dir = os.path.dirname(__file__)
+pkl_path = os.path.join(current_dir, '..', 'data', 'clusteredDataset.pkl')
+df = pd.read_pickle(pkl_path)
+
+st.dataframe(df.head(50))
+st.dataframe(pick_recommended_games("bob", 10))
+'''
+
+st.header("Games recommended for you")
+display_games(pick_recommended_games(get_current_user()["username"], 10))
+
+st.header("Popular games you may like")
+display_games(pick_popular_games(10))
+
+st.header("Games recommended to .....")

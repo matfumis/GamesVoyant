@@ -2,6 +2,7 @@ import mysql.connector
 import streamlit as st
 from mysql.connector import Error
 
+
 def get_connection():
     try:
         db_credentials = st.secrets["mysql"]
@@ -56,3 +57,65 @@ def add_user(username, password_hash, name, surname, nationality, date_of_birth)
     finally:
         cursor.close()
         conn.close()
+
+
+def search_users(search_query):
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.callproc('SearchUsers', [search_query])
+
+        results = []
+        for result in cursor.stored_results():
+            results.extend(result.fetchall())
+        return results
+
+    except Error as e:
+        print("Error while executing stored procedure:", e)
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+
+def add_follow(user_id, other_id):
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.callproc('AddFollow', [user_id, other_id])
+        connection.commit()
+        return True
+    except Error as e:
+        print("Error while executing stored procedure AddFollow:", e)
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+
+def remove_follow(user_id, other_id):
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.callproc('RemoveFollow', [user_id, other_id])
+        connection.commit()
+        return True
+    except Error as e:
+        print("Error while executing stored procedure RemoveFollow:", e)
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()

@@ -10,6 +10,7 @@ def clear_session_state():
     yield
     st.session_state.clear()
 
+
 @pytest.fixture
 def capture_messages(monkeypatch):
     messages = {"error": [], "success": []}
@@ -20,18 +21,21 @@ def capture_messages(monkeypatch):
 
 def test_register_user_exists(monkeypatch, capture_messages):
     monkeypatch.setattr("modules.database.get_user", lambda username: {"username": username})
-    
+
     result = register("existing_user", "password", "Name", "Surname", "Nationality", "2000-01-01")
     assert result is False
     assert any("Username already exists" in msg for msg in capture_messages["error"])
+
 
 def test_register_success(monkeypatch, capture_messages):
     monkeypatch.setattr("modules.database.get_user", lambda username: None)
 
     add_user_called = False
+
     def dummy_add_user(username, password_hash, name, surname, nationality, date_of_birth):
         nonlocal add_user_called
         add_user_called = True
+
     monkeypatch.setattr("modules.database.add_user", dummy_add_user)
 
     result = register("new_user", "mypassword", "Name", "Surname", "Nationality", "2000-01-01")
@@ -39,11 +43,13 @@ def test_register_success(monkeypatch, capture_messages):
     assert add_user_called is True
     assert any("Registration successful!" in msg for msg in capture_messages["success"])
 
+
 def test_register_exception(monkeypatch, capture_messages):
     monkeypatch.setattr("modules.database.get_user", lambda username: None)
 
     def dummy_add_user(username, password_hash, name, surname, nationality, date_of_birth):
         raise Exception("DB error")
+
     monkeypatch.setattr("modules.database.add_user", dummy_add_user)
 
     result = register("new_user", "mypassword", "Name", "Surname", "Nationality", "2000-01-01")
@@ -53,10 +59,11 @@ def test_register_exception(monkeypatch, capture_messages):
 
 def test_login_user_not_found(monkeypatch, capture_messages):
     monkeypatch.setattr("modules.database.get_user", lambda username: None)
-    
+
     result = login("nonexistent", "password")
     assert result is False
     assert any("User not found" in msg for msg in capture_messages["error"])
+
 
 def test_login_success(monkeypatch, capture_messages):
     password = "secret"
@@ -69,6 +76,7 @@ def test_login_success(monkeypatch, capture_messages):
     assert result is True
     assert st.session_state.get("user") == user_data
     assert any("Login successful!" in msg for msg in capture_messages["success"])
+
 
 def test_login_incorrect_password(monkeypatch, capture_messages):
     correct_password = "correct"
@@ -89,7 +97,7 @@ def test_logout_and_get_current_user():
     user = get_current_user()
     assert user is not None
     assert user["username"] == "test"
-    
+
     logout()
     user_after_logout = get_current_user()
     assert user_after_logout is None

@@ -4,6 +4,7 @@ import streamlit as st
 
 from modules.database import *
 
+
 class DummyCursor:
     def __init__(self, user_data=None):
         self.user_data = user_data
@@ -21,6 +22,7 @@ class DummyCursor:
 
     def close(self):
         self.closed = True
+
 
 class DummyConnection:
     def __init__(self, user_data=None):
@@ -44,8 +46,10 @@ class DummyConnection:
 def dummy_connect_success(*args, **kwargs):
     return DummyConnection(user_data={"username": "test", "name": "Test"})
 
+
 def dummy_connect_failure(*args, **kwargs):
     raise mysql.connector.Error("Connection failed")
+
 
 # --- Tests ---
 
@@ -65,6 +69,7 @@ def test_get_connection_success(monkeypatch):
     assert conn.is_connected() is True
     conn.close()
 
+
 def test_get_connection_failure(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -81,6 +86,7 @@ def test_get_connection_failure(monkeypatch):
     # On failure, get_connection should return None.
     assert conn is None
 
+
 def test_get_user(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -96,6 +102,7 @@ def test_get_user(monkeypatch):
     assert user is not None
     assert user["username"] == "test"
 
+
 def test_add_user(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -106,6 +113,7 @@ def test_add_user(monkeypatch):
         }
     }
     dummy_conn = DummyConnection()
+
     def dummy_connect_for_add(*args, **kwargs):
         return dummy_conn
 
