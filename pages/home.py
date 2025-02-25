@@ -20,7 +20,7 @@ with st.sidebar:
     if st.button("Logout"):
         logout()
         st.switch_page("app.py")
-'''
+"""
 st.header("A bunch of games that you may like:")
 
 current_dir = os.path.dirname(__file__)
@@ -29,7 +29,7 @@ df = pd.read_pickle(pkl_path)
 
 st.dataframe(df.head(50))
 st.dataframe(pick_recommended_games("bob", 10))
-'''
+"""
 
 st.header("Games recommended for you")
 display_games(pick_recommended_games(get_current_user()["username"], 10))

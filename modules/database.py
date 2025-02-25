@@ -119,3 +119,19 @@ def remove_follow(user_id, other_id):
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
+
+def add_liked_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("AddLikedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's liked games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+

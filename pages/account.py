@@ -28,8 +28,12 @@ st.markdown("---")
 st.header("Your saved games")
 st.write(user['saved_games'])
 
+games = pd.read_pickle('data/clusteredDataset.pkl').head(100)
+st.write(games)
+
 st.markdown("---")
 
 st.header("Followed users")
 
+friends_df = user
 

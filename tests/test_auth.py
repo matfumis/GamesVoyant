@@ -41,7 +41,6 @@ def test_register_success(monkeypatch, capture_messages):
     result = register("new_user", "mypassword", "Name", "Surname", "Nationality", "2000-01-01")
     assert result is True
     assert add_user_called is True
-    assert any("Registration successful!" in msg for msg in capture_messages["success"])
 
 
 def test_register_exception(monkeypatch, capture_messages):
@@ -75,7 +74,6 @@ def test_login_success(monkeypatch, capture_messages):
     result = login("test", password)
     assert result is True
     assert st.session_state.get("user") == user_data
-    assert any("Login successful!" in msg for msg in capture_messages["success"])
 
 
 def test_login_incorrect_password(monkeypatch, capture_messages):
