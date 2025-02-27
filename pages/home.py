@@ -2,6 +2,7 @@ from modules.auth import *
 from modules.recommender import *
 from modules.utils import *
 
+st.set_page_config(layout="wide")
 # Controlla subito se l'utente è autenticato; se non lo è, redireziona subito all'entry point dell'app
 user = get_current_user()
 if user is None:
@@ -20,21 +21,13 @@ with st.sidebar:
     if st.button("Logout"):
         logout()
         st.switch_page("app.py")
-"""
-st.header("A bunch of games that you may like:")
-
-current_dir = os.path.dirname(__file__)
-pkl_path = os.path.join(current_dir, '..', 'data', 'clusteredDataset.pkl')
-df = pd.read_pickle(pkl_path)
-
-st.dataframe(df.head(50))
-st.dataframe(pick_recommended_games("bob", 10))
-"""
 
 st.header("Games recommended for you")
-display_games(pick_recommended_games(get_current_user()["username"], 10))
+display_games_in_grid(pick_recommended_games(get_current_user()["username"], 12), "recommended4you")
+st.markdown("---")
 
 st.header("Popular games you may like")
-display_games(pick_popular_games(10))
+display_games_in_grid(pick_popular_games(12), "popular")
+st.markdown("---")
 
 st.header("Games recommended to .....")

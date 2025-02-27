@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from modules.database import *
+from modules.auth import *
 import json
 
 
@@ -10,8 +11,18 @@ def get_dataframe():
     return pd.read_pickle(pkl_path)
 
 
+def get_filtered_dataframe(df):
+    user = get_current_user()
+    games_liked = json.loads(user["games_liked"])
+    games_disliked = json.loads(user["games_disliked"])
+    saved_games = json.loads(user["saved_games"])
+    df_filtered = df[
+        ~(df['AppID'].isin(games_liked) | df['AppID'].isin(games_disliked) | df['AppID'].isin(saved_games))]
+    return df_filtered
+
+
 def pick_popular_games(n_of_games):
-    df = get_dataframe()
+    df = get_filtered_dataframe(get_dataframe())
     top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
     return top_1000.sample(n_of_games)
 
@@ -27,9 +38,7 @@ def pick_recommended_games(username, n_of_games):
     user = get_user(username)
     games_liked = json.loads(user["games_liked"])
     cluster_counts = get_cluster_counts(games_liked, df)
-
-    df_filtered = df[~df['AppID'].isin(games_liked)]
-
+    df_filtered = get_filtered_dataframe(df)
     samples = []
 
     for cluster, liked_count in cluster_counts.items():

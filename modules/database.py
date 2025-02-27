@@ -125,6 +125,7 @@ def add_liked_game(user_id, game_id):
     conn = get_connection()
     if conn is None:
         return
+    cursor = None
     try:
         cursor = conn.cursor()
         cursor.callproc("AddLikedGame", [user_id, game_id])
@@ -135,3 +136,82 @@ def add_liked_game(user_id, game_id):
         cursor.close()
         conn.close()
 
+
+def add_disliked_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("AddDislikedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's disliked games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def add_saved_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("AddSavedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's saved games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_liked_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("RemoveLikedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's liked games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_disliked_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("RemoveDislikedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's disliked games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_saved_game(user_id, game_id):
+    conn = get_connection()
+    if conn is None:
+        return
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.callproc("RemoveSavedGame", [user_id, game_id])
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error updating user's saved games: {e}")
+    finally:
+        cursor.close()
+        conn.close()
