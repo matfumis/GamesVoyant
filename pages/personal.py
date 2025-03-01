@@ -16,9 +16,9 @@ if loaded and "saved_games" in loaded:
 
 st.title("Personal Area")
 
-
 st.sidebar.page_link('pages/home.py', label='Home')
 st.sidebar.page_link('pages/personal.py', label='Personal Area')
+st.sidebar.page_link('pages/search users.py', label='Search Users')
 with st.sidebar:
     st.write("")
     st.write("")
@@ -51,7 +51,7 @@ if not saved_games_list:
 else:
     for i in range(0, len(saved_games_list), num_columns):
         cols = st.columns(num_columns)
-        for j, game in enumerate(saved_games_list[i:i+num_columns]):
+        for j, game in enumerate(saved_games_list[i:i + num_columns]):
             with cols[j]:
                 if game.get("Header image"):
                     st.image(game["Header image"], use_column_width=True)
@@ -62,7 +62,7 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     app_id = game.get("AppID", None)
-                    if st.button("Remove from Saved", key=f"remove_{i+j}"):
+                    if st.button("Remove from Saved", key=f"remove_{i + j}"):
                         success = remove_saved_game(user_id, app_id)
                         if success:
                             st.success("Game removed from saved games.")
@@ -94,17 +94,15 @@ else:
     num_columns = 3
     for i in range(0, len(followed_users_details), num_columns):
         cols = st.columns(num_columns)
-        for j, followed in enumerate(followed_users_details[i:i+num_columns]):
+        for j, followed in enumerate(followed_users_details[i:i + num_columns]):
             with cols[j]:
                 default_user_icon = f"https://robohash.org/{followed['username']}?set=set1"
                 st.image(default_user_icon, width=150)
                 st.markdown(f"### {followed['username']}")
                 st.write(f"{followed['name']} {followed['surname']}")
                 # Optionally, add a button to view profile or unfollow
-                if st.button("View Profile", key=f"profile_{i+j}"):
+                if st.button("View Profile", key=f"profile_{i + j}"):
                     st.session_state.profile_user = followed
                     st.switch_page("pages/followed_profile.py")
 
 st.markdown("---")
-
-

@@ -1,23 +1,37 @@
 import streamlit as st
-from modules.auth import get_current_user
-from modules.database import search_users, add_follow, remove_follow
+from modules.auth import *
+from modules.database import *
+from modules.utils import *
 
+st.set_page_config(layout="wide")
 current_user = get_current_user()
-if not current_user:
-    st.error("Non sei autenticato. Effettua il login.")
-    st.stop()
+if current_user is None:
+    st.switch_page("app.py")
 
 st.title("Search Users")
 st.write("Find other users to follow!")
 
-search_query = st.text_input("Cerca per username, nome o cognome")
+st.sidebar.page_link('pages/home.py', label='Home')
+st.sidebar.page_link('pages/personal.py', label='Personal Area')
+st.sidebar.page_link('pages/search users.py', label='Search Users')
+with st.sidebar:
+    st.write("")
+    st.write("")
+    st.info(f"Logged in as: {current_user['username']}")
+    if st.button("Logout"):
+        logout()
+        st.switch_page("app.py")
 
-if st.button("Cerca"):
+search_query = st.text_input("Search by username, name or surname")
+
+if st.button("Search"):
     results = search_users(search_query)
+    followed_users = get_followed_users(current_user)
     if not results:
-        st.info("Nessun utente trovato.")
+        st.info("User not found")
     else:
-        st.write("Risultati della ricerca:")
+        st.markdown("---")
+
         for user in results:
             if user["user_id"] == current_user["user_id"]:
                 continue
@@ -25,18 +39,25 @@ if st.button("Cerca"):
             info_col, action_col = st.columns([3, 1])
             with info_col:
                 st.markdown(f"**Username:** {user['username']}")
-                st.markdown(f"**Nome:** {user['name']}")
-                st.markdown(f"**Cognome:** {user['surname']}")
-                st.markdown(f"**Nazionalità:** {user['nationality']}")
-                st.markdown(f"**Data di nascita:** {user['date_of_birth']}")
+                st.markdown(f"**Name:** {user['name']}")
+                st.markdown(f"**Surname:** {user['surname']}")
+                st.markdown(f"**Nationality:** {user['nationality']}")
+                st.markdown(f"**Date of birth:** {user['date_of_birth']}")
             with action_col:
-                followed = False
-                if "followed_users" in current_user and current_user["followed_users"]:
-                    followed = user["user_id"] in current_user["followed_users"]
+                followed = user["username"] in followed_users
 
                 if followed:
-                    if st.button("Non Seguire", key=f"unfollow_{user['user_id']}"):
-                        add_follow(current_user["user_id"], user["user_id"])
+                    st.button(
+                        "Unfollow",
+                        key=f"unfollow_{user['user_id']}",
+                        on_click=remove_follow,
+                        args=(current_user["user_id"], user["user_id"])
+                    )
                 else:
-                    if st.button("Segui", key=f"follow_{user['user_id']}"):
-                        remove_follow(current_user["user_id"], user["user_id"])
+                    st.button(
+                        "Follow",
+                        key=f"follow_{user['user_id']}",
+                        on_click=add_follow,
+                        args=(current_user["user_id"], user["user_id"])
+                    )
+            st.markdown("---")

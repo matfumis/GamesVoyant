@@ -1,6 +1,16 @@
 import streamlit as st
 from modules.database import *
 from modules.auth import *
+import json
+
+
+def get_followed_users(user):
+    followed_users_ids = json.loads(user["followed_users"])
+    followed_users_usernames = []
+    for user_id in followed_users_ids:
+        username = get_username(user_id)
+        followed_users_usernames.append(username)
+    return followed_users_usernames
 
 
 def display_games_in_grid(df, prefix):
@@ -19,7 +29,7 @@ def display_games_in_grid(df, prefix):
                 # st.markdown(f"#### {game['Name']}")
                 # st.write(f"**Release Date:** {game['Release date']}")
                 st.image(game["Header image"], use_column_width=True)
-                # st.write(f"**Price:** {game['Price']}")
+                #  st.write(f"**Price:** {game['Price']}")
 
                 st.markdown(f"""
                         <div style="height:120px; overflow-y:auto">
@@ -29,13 +39,11 @@ def display_games_in_grid(df, prefix):
                         </div>
                     """, unsafe_allow_html=True)
 
-                like_button = st.button("Like", key=f"{prefix}_like_{start_idx + col_idx}")
-                dislike_button = st.button("Dislike", key=f"{prefix}_dislike_{start_idx + col_idx}")
-                save_button = st.button("Save", key=f"{prefix}_save_{start_idx + col_idx}")
+                app_id = game["AppID"]
 
-                if like_button:
-                    add_liked_game(user['user_id'], game["AppID"])
-                if dislike_button:
-                    add_disliked_game(user['user_id'], game["AppID"])
-                if save_button:
-                    add_saved_game(user['user_id'], game["AppID"])
+                st.button("Like", key=f"{prefix}_like_{start_idx + col_idx}",
+                          on_click=add_liked_game, args=(user['user_id'], app_id))
+                st.button("Dislike", key=f"{prefix}_dislike_{start_idx + col_idx}",
+                          on_click=add_disliked_game, args=(user['user_id'], app_id))
+                st.button("Save", key=f"{prefix}_save_{start_idx + col_idx}",
+                          on_click=add_saved_game, args=(user['user_id'], app_id))

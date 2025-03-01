@@ -44,6 +44,30 @@ def get_user(username):
             connection.close()
 
 
+def get_username(user_id):
+    connection = None
+    cursor = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.callproc('GetUsername', [user_id])
+
+        user_data = None
+        for result in cursor.stored_results():
+            user_data = result.fetchone()
+        return user_data["username"]
+
+    except Error as e:
+        print("Error while executing stored procedure:", e)
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+
 def add_user(username, password_hash, name, surname, nationality, date_of_birth):
     conn = get_connection()
     if conn is None:
@@ -218,6 +242,7 @@ def remove_saved_game(user_id, game_id):
         cursor.close()
         conn.close()
 
+
 def get_user_by_id(user_id):
     connection = None
     cursor = None
@@ -225,7 +250,7 @@ def get_user_by_id(user_id):
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
         cursor.callproc('GetUserById', [user_id])
-        
+
         user_data = None
         for result in cursor.stored_results():
             user_data = result.fetchone()
