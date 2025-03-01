@@ -3,13 +3,11 @@ import json
 import pandas as pd
 from modules.auth import get_current_user, logout, get_user
 
-# Ensure the user is logged in.
 current_user = get_current_user()
 if current_user is None:
     st.switch_page("app.py")
     st.stop()
 
-# Check that a profile user is stored in session_state.
 if "profile_user" not in st.session_state:
     st.info("No profile selected, redirecting to Personal Area.")
     st.switch_page("personal")
@@ -19,7 +17,6 @@ profile_user = st.session_state.profile_user
 
 st.title(f"Profile: {profile_user['username']}")
 
-# Sidebar for navigation.
 st.sidebar.page_link('pages/home.py', label='Home')
 st.sidebar.page_link('pages/personal.py', label='Personal Area')
 with st.sidebar:
@@ -32,11 +29,9 @@ with st.sidebar:
 
 st.markdown("---")
 
-# Display a profile image (using RoboHash as a placeholder).
 default_user_icon = f"https://robohash.org/{profile_user['username']}?set=set1"
 st.image(default_user_icon, width=150)
 
-# Display user details.
 st.header(f"{profile_user.get('name', '')} {profile_user.get('surname', '')}")
 st.subheader(f"Username: {profile_user['username']}")
 st.write(f"Nationality: {profile_user.get('nationality', 'N/A')}")
@@ -76,6 +71,5 @@ else:
 
 st.markdown("---")
 
-# Button to return to the personal area.
 if st.button("Back to Personal Area"):
     st.switch_page("pages/personal.py")
