@@ -13,7 +13,7 @@ st.title("Home")
 # sidebar custom, serve per nascondere authentication.py e app.py a cui l'utente di fatto non serve mai accedere.
 # Si aggiungono solo le pagine a cui l'utente può accedere
 st.sidebar.page_link('pages/home.py', label='Home')
-st.sidebar.page_link('pages/account.py', label='Personal Area')
+st.sidebar.page_link('pages/personal.py', label='Personal Area')
 with st.sidebar:
     st.write("")
     st.write("")

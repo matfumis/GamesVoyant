@@ -16,10 +16,18 @@ def display_games_in_grid(df, prefix):
 
         for col_idx, (_, game) in enumerate(row_games.iterrows()):
             with columns[col_idx]:
-                st.markdown(f"#### {game['Name']}")
-                st.write(f"**Release Date:** {game['Release date']}")
-                st.image(game["Header image"], width=200)
-                st.write(f"**Price:** {game['Price']}")
+                # st.markdown(f"#### {game['Name']}")
+                # st.write(f"**Release Date:** {game['Release date']}")
+                st.image(game["Header image"], use_column_width=True)
+                # st.write(f"**Price:** {game['Price']}")
+
+                st.markdown(f"""
+                        <div style="height:120px; overflow-y:auto">
+                            <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
+                            <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+                            <p style="color: gray; margin-top: 0rem;">Price: {game["Price"]}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                 like_button = st.button("Like", key=f"{prefix}_like_{start_idx + col_idx}")
                 dislike_button = st.button("Dislike", key=f"{prefix}_dislike_{start_idx + col_idx}")
