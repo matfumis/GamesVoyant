@@ -265,27 +265,3 @@ def get_user_by_id(user_id):
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
-
-
-def load_saved_games(user_id):
-    connection = None
-    cursor = None
-    try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.callproc('LoadSavedGames', [user_id])
-
-        saved_games = None
-        for result in cursor.stored_results():
-            saved_games = result.fetchone()
-        return saved_games
-
-    except Error as e:
-        print("Error while executing stored procedure:", e)
-        return None
-
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()

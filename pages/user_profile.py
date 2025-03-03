@@ -19,6 +19,7 @@ st.title(f"Profile: {profile_user['username']}")
 
 st.sidebar.page_link('pages/home.py', label='Home')
 st.sidebar.page_link('pages/personal.py', label='Personal Area')
+st.sidebar.page_link('pages/search users.py', label='Search Users')
 with st.sidebar:
     st.write("")
     st.write("")

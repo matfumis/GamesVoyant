@@ -29,6 +29,7 @@ st.header("Popular games you may like")
 display_games_in_grid(pick_popular_games(12), "popular")
 st.markdown("---")
 
+user = get_user(user['username'])
 followed_users = get_followed_users(user)
 selected_user = st.selectbox("Select one of your followed users:", followed_users)
 

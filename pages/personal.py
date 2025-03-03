@@ -10,7 +10,8 @@ if user is None:
     st.switch_page("app.py")
     st.stop()
 
-loaded = load_saved_games(user["user_id"])
+user = get_user(user['username'])
+loaded = user["saved_games"]
 if loaded and "saved_games" in loaded:
     user["saved_games"] = loaded["saved_games"]
 
@@ -103,6 +104,6 @@ else:
                 # Optionally, add a button to view profile or unfollow
                 if st.button("View Profile", key=f"profile_{i + j}"):
                     st.session_state.profile_user = followed
-                    st.switch_page("pages/followed_profile.py")
+                    st.switch_page("pages/user_profile.py")
 
 st.markdown("---")
