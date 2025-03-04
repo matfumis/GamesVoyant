@@ -8,3 +8,10 @@ repos:
         types: [python]
         pass_filenames: false
         always_run: true
+      - id: cov
+        name: Coverage report
+        entry: pytest --cov
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
