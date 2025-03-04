@@ -6,7 +6,7 @@ user = get_current_user()
 if user is None:
     st.switch_page("app.py")
 
-user = get_user_by_id(user["user_id"])
+user = get_user(user["username"])
 loaded = user["saved_games"]
 if loaded and "saved_games" in loaded:
     user["saved_games"] = loaded["saved_games"]
@@ -68,17 +68,14 @@ st.markdown("---")
 ##########################
 st.header("Followed users")
 
-followed_users = user.get("followed_users", "[]")
-if isinstance(followed_users, str):
-    followed_users = json.loads(followed_users)
+followed_users = get_followed_users(user)
 
 if not followed_users:
     st.info("You are not following any users.")
 else:
-    # Retrieve full details for each followed user.
     followed_users_details = []
-    for f_id in followed_users:
-        followed_user = get_user_by_id(f_id)  # Make sure this function exists and returns a user dict
+    for username in followed_users:
+        followed_user = get_user(username)
         if followed_user:
             followed_users_details.append(followed_user)
 

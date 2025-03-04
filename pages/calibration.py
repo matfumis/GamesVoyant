@@ -9,7 +9,7 @@ user = get_current_user()
 if user is None:
     st.switch_page("app.py")
 
-user = get_user_by_id(user["user_id"])
+user = get_user(user["username"])
 
 st.set_page_config(layout="wide")
 st.title("Choose your favorite games")
@@ -41,7 +41,7 @@ for i in range(0, len(grid_df), num_columns):
         with col:
             if 'Header image' in game and pd.notnull(game['Header image']):
                 img = game.get("Header image")
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
                 col.markdown(f"""
                     <div style="height:120px; overflow-y:auto">
                         <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>

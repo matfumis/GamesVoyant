@@ -24,6 +24,47 @@ def get_followed_users(user):
     return followed_users_usernames
 
 
+def display_users(results, current_user):
+    followed_users = get_followed_users(current_user)
+    st.markdown("---")
+    for user in results:
+        if user["user_id"] == current_user["user_id"]:
+            continue
+
+        col_image, col_info, col_view, col_follow = st.columns([1, 1, 1, 1])
+
+        with col_image:
+            default_user_icon = f"https://robohash.org/{user['username']}?set=set1"
+            st.image(default_user_icon, width=100)
+
+        with col_info:
+            st.markdown(f"**Username:** {user['username']}")
+
+        with col_view:
+            if st.button("View Profile", key=f"view_{user['user_id']}"):
+                st.session_state.profile_user = user
+                st.switch_page("pages/user_profile.py")
+
+        with col_follow:
+            followed = user["username"] in followed_users
+            if followed:
+                st.button(
+                    "Unfollow",
+                    key=f"unfollow_{user['user_id']}",
+                    on_click=remove_follow,
+                    args=(current_user["user_id"], user["user_id"])
+                )
+            else:
+                st.button(
+                    "Follow",
+                    key=f"follow_{user['user_id']}",
+                    on_click=add_follow,
+                    args=(current_user["user_id"], user["user_id"])
+                )
+
+        st.markdown("---")
+
+
 def display_games_in_grid(df, prefix):
     num_rows = 3
     num_cols = 4

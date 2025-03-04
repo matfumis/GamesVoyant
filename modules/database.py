@@ -241,27 +241,3 @@ def remove_saved_game(user_id, game_id):
     finally:
         cursor.close()
         conn.close()
-
-
-def get_user_by_id(user_id):
-    connection = None
-    cursor = None
-    try:
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.callproc('GetUserById', [user_id])
-
-        user_data = None
-        for result in cursor.stored_results():
-            user_data = result.fetchone()
-        return user_data
-
-    except Exception as e:
-        print("Error while executing stored procedure GetUserById:", e)
-        return None
-
-    finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
-            connection.close()
