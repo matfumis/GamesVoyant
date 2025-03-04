@@ -8,19 +8,12 @@ current_user = get_current_user()
 if current_user is None:
     st.switch_page("app.py")
 
+current_user = get_user_by_id(current_user["user_id"])
+
 st.title("Search Users")
 st.write("Find other users to follow!")
 
-st.sidebar.page_link('pages/home.py', label='Home')
-st.sidebar.page_link('pages/personal.py', label='Personal Area')
-st.sidebar.page_link('pages/search users.py', label='Search Users')
-with st.sidebar:
-    st.write("")
-    st.write("")
-    st.info(f"Logged in as: {current_user['username']}")
-    if st.button("Logout"):
-        logout()
-        st.switch_page("app.py")
+custom_sidebar(current_user)
 
 search_query = st.text_input("Search by username, name or surname")
 

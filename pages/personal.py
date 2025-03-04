@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from modules.auth import *
 from modules.database import *
+from modules.utils import custom_sidebar
 
 user = get_current_user()
 
@@ -10,23 +11,15 @@ if user is None:
     st.switch_page("app.py")
     st.stop()
 
-user = get_user(user['username'])
+user = get_user_by_id(user["user_id"])
 loaded = user["saved_games"]
 if loaded and "saved_games" in loaded:
     user["saved_games"] = loaded["saved_games"]
 
+
 st.title("Personal Area")
 
-st.sidebar.page_link('pages/home.py', label='Home')
-st.sidebar.page_link('pages/personal.py', label='Personal Area')
-st.sidebar.page_link('pages/search users.py', label='Search Users')
-with st.sidebar:
-    st.write("")
-    st.write("")
-    st.info(f"Logged in as: {user['username']}")
-    if st.button("Logout"):
-        logout()
-        st.switch_page("app.py")
+custom_sidebar(user)
 
 st.header(f"Welcome, {user['username']}")
 st.markdown("---")
@@ -55,7 +48,7 @@ else:
         for j, game in enumerate(saved_games_list[i:i + num_columns]):
             with cols[j]:
                 if game.get("Header image"):
-                    st.image(game["Header image"], use_column_width=True)
+                    st.image(game["Header image"], use_container_width=True)
                     st.markdown(f"""
                         <div style="height:120px; overflow-y:auto">
                             <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
@@ -63,6 +56,9 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                     app_id = game.get("AppID", None)
+                    with st.popover("Description"):
+                        st.write(game["About the game"])
+
                     if st.button("Remove from Saved", key=f"remove_{i + j}"):
                         success = remove_saved_game(user_id, app_id)
                         if success:
@@ -107,3 +103,13 @@ else:
                     st.switch_page("pages/user_profile.py")
 
 st.markdown("---")
+
+st.write("In any moment, you can choose to reset your preferences and start over by choosing games like the first time you registered:")
+if st.button("Reset preferences"):
+    games_liked = json.loads(user["games_liked"])
+    games_disliked = json.loads(user["games_disliked"])
+    for game in games_liked:
+        remove_liked_game(user["user_id"], game)
+    for game in games_disliked:
+        remove_disliked_game(user["user_id"], game)
+    st.switch_page("pages/calibration.py")

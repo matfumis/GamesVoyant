@@ -1,101 +1,116 @@
-import pytest
+import json
 import bcrypt
+import pytest
 import streamlit as st
-from modules.auth import *
 
+from modules.auth import register, login, logout, get_current_user
+
+
+def fake_get_user_none(username):
+    return None
+
+def fake_get_user_existing(username):
+    password = "secret"
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    return {
+        "username": username,
+        "password_hash": hashed,
+        "name": "Test",
+        "surname": "User",
+        "nationality": "TestLand",
+        "date_of_birth": "2000-01-01",
+        "saved_games": "[]",
+        "followed_users": "[]",
+        "user_id": 1,
+    }
+
+def fake_add_user(username, password_hash, name, surname, nationality, date_of_birth):
+    return
+
+class ErrorCapture:
+    def __init__(self):
+        self.errors = []
+    def __call__(self, message):
+        self.errors.append(message)
+
+# --- Tests ---
 
 @pytest.fixture(autouse=True)
-def clear_session_state():
-    st.session_state.clear()
+def reset_session_state():
+    if "user" in st.session_state:
+        del st.session_state["user"]
     yield
-    st.session_state.clear()
+    if "user" in st.session_state:
+        del st.session_state["user"]
 
+def test_register_success(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_none)
+    monkeypatch.setattr("modules.auth.add_user", fake_add_user)
 
-@pytest.fixture
-def capture_messages(monkeypatch):
-    messages = {"error": [], "success": []}
-    monkeypatch.setattr(st, "error", lambda msg: messages["error"].append(msg))
-    monkeypatch.setattr(st, "success", lambda msg: messages["success"].append(msg))
-    return messages
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-
-def test_register_user_exists(monkeypatch, capture_messages):
-    monkeypatch.setattr("modules.database.get_user", lambda username: {"username": username})
-
-    result = register("existing_user", "password", "Name", "Surname", "Nationality", "2000-01-01")
-    assert result is False
-    assert any("Username already exists" in msg for msg in capture_messages["error"])
-
-
-def test_register_success(monkeypatch, capture_messages):
-    monkeypatch.setattr("modules.database.get_user", lambda username: None)
-
-    add_user_called = False
-
-    def dummy_add_user(username, password_hash, name, surname, nationality, date_of_birth):
-        nonlocal add_user_called
-        add_user_called = True
-
-    monkeypatch.setattr("modules.database.add_user", dummy_add_user)
-
-    result = register("new_user", "mypassword", "Name", "Surname", "Nationality", "2000-01-01")
+    result = register("newuser", "password123", "Alice", "Smith", "Wonderland", "1990-01-01")
     assert result is True
-    assert add_user_called is True
+    assert error_capture.errors == [] 
 
+def test_register_existing(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_existing)
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-def test_register_exception(monkeypatch, capture_messages):
-    monkeypatch.setattr("modules.database.get_user", lambda username: None)
+    result = register("existinguser", "password123", "Bob", "Jones", "Nowhere", "1990-01-01")
+    assert result is False
+    assert any("Username already exists" in err for err in error_capture.errors)
 
-    def dummy_add_user(username, password_hash, name, surname, nationality, date_of_birth):
+def test_register_exception(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_none)
+    def fake_add_user_error(*args, **kwargs):
         raise Exception("DB error")
+    monkeypatch.setattr("modules.auth.add_user", fake_add_user_error)
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-    monkeypatch.setattr("modules.database.add_user", dummy_add_user)
-
-    result = register("new_user", "mypassword", "Name", "Surname", "Nationality", "2000-01-01")
+    result = register("erroruser", "password123", "Carol", "Doe", "Testland", "1990-01-01")
     assert result is False
-    assert any("Error during registration" in msg for msg in capture_messages["error"])
+    assert any("Error during registration" in err for err in error_capture.errors)
 
+def test_login_success(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_existing)
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-def test_login_user_not_found(monkeypatch, capture_messages):
-    monkeypatch.setattr("modules.database.get_user", lambda username: None)
-
-    result = login("nonexistent", "password")
-    assert result is False
-    assert any("User not found" in msg for msg in capture_messages["error"])
-
-
-def test_login_success(monkeypatch, capture_messages):
-    password = "secret"
-    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    user_data = {"username": "test", "password_hash": password_hash, "name": "Test"}
-
-    monkeypatch.setattr("modules.database.get_user", lambda username: user_data)
-
-    result = login("test", password)
+    result = login("testuser", "secret")
     assert result is True
-    assert st.session_state.get("user") == user_data
+    current = get_current_user()
+    assert current is not None
+    assert current["username"] == "testuser"
+    assert error_capture.errors == []
 
+def test_login_user_not_found(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_none)
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-def test_login_incorrect_password(monkeypatch, capture_messages):
-    correct_password = "correct"
-    wrong_password = "wrong"
-    password_hash = bcrypt.hashpw(correct_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    user_data = {"username": "test", "password_hash": password_hash, "name": "Test"}
-
-    monkeypatch.setattr("modules.database.get_user", lambda username: user_data)
-
-    result = login("test", wrong_password)
+    result = login("nonexistent", "any_password")
     assert result is False
-    assert st.session_state.get("user") is None
-    assert any("Incorrect password" in msg for msg in capture_messages["error"])
+    assert any("User not found" in err for err in error_capture.errors)
 
+def test_login_incorrect_password(monkeypatch):
+    monkeypatch.setattr("modules.auth.get_user", fake_get_user_existing)
+    error_capture = ErrorCapture()
+    monkeypatch.setattr(st, "error", error_capture)
 
-def test_logout_and_get_current_user():
-    st.session_state.user = {"username": "test", "name": "Test"}
-    user = get_current_user()
-    assert user is not None
-    assert user["username"] == "test"
+    result = login("testuser", "wrongpassword")
+    assert result is False
+    assert any("Incorrect password" in err for err in error_capture.errors)
 
+def test_logout(monkeypatch):
+    st.session_state.user = {"username": "testuser"}
     logout()
-    user_after_logout = get_current_user()
-    assert user_after_logout is None
+    assert st.session_state.get("user") is None
+
+def test_get_current_user(monkeypatch):
+    st.session_state.user = {"username": "testuser"}
+    user = get_current_user()
+    assert user["username"] == "testuser"

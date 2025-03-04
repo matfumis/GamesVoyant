@@ -10,16 +10,7 @@ if user is None:
 
 st.title("Home")
 
-st.sidebar.page_link('pages/home.py', label='Home')
-st.sidebar.page_link('pages/personal.py', label='Personal Area')
-st.sidebar.page_link('pages/search users.py', label='Search Users')
-with st.sidebar:
-    st.write("")
-    st.write("")
-    st.info(f"Logged in as: {user['username']}")
-    if st.button("Logout"):
-        logout()
-        st.switch_page("app.py")
+custom_sidebar(user)
 
 st.header("Games recommended to you")
 display_games_in_grid(pick_recommended_games(get_current_user()["username"], 12), "recommended_to_you")

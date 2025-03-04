@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from modules.auth import get_current_user
-from modules.database import add_liked_game 
+from modules.database import *
 
 games_path = "data/clusteredDataset.pkl"
 
@@ -11,6 +11,8 @@ user = get_current_user()
 if user is None:
     st.switch_page("app.py")
     st.stop()
+
+user = get_user_by_id(user["user_id"])
 
 st.set_page_config(layout="wide")
 st.title("Choose your favorite games")
@@ -24,11 +26,14 @@ except Exception:
 
 df = pd.read_pickle(games_path)
 
-df["Cluster_fake"] = np.random.randint(0, 21, size=len(df))
+top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
 
-sorted_df = df.sort_values(by="Positive", ascending=False)
+n_of_games = 40
 
-grid_df = sorted_df.head(20)
+if "grid_df" not in st.session_state:
+    st.session_state.grid_df = top_1000.sample(n_of_games)
+
+grid_df = st.session_state.grid_df
 
 num_columns = 5
 selected_games = {}
@@ -44,7 +49,6 @@ for i in range(0, len(grid_df), num_columns):
                     <div style="height:120px; overflow-y:auto">
                         <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
                         <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
-                        <p>Positive: {game["Positive"]}</p>
                     </div>
                 """, unsafe_allow_html=True)
             else:
@@ -57,11 +61,9 @@ for i in range(0, len(grid_df), num_columns):
 
 updated_games_liked = [app_id for app_id, selected in selected_games.items() if selected]
 
-st.write("Liked games:", updated_games_liked)
-
 if st.button("Submit"):
-    if not (1 <= len(updated_games_liked) <= 3):
-        st.error("Please select between 1 and 3 games")
+    if not (5 <= len(updated_games_liked)):
+        st.error("Please select at least 5 games")
     else:
         for game_id in updated_games_liked:
             add_liked_game(get_current_user()['user_id'], game_id)
