@@ -59,5 +59,5 @@ else:
 
 st.markdown("---")
 
-if st.button("Back to Personal Area"):
-    st.switch_page("pages/personal.py")
+if st.button("Back"):
+    st.switch_page("pages/search_users.py")

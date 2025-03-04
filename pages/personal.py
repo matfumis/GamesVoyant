@@ -7,9 +7,6 @@ if user is None:
     st.switch_page("app.py")
 
 user = get_user(user["username"])
-loaded = user["saved_games"]
-if loaded and "saved_games" in loaded:
-    user["saved_games"] = loaded["saved_games"]
 
 st.title("Personal Area")
 

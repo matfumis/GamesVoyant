@@ -1,6 +1,8 @@
 from modules.auth import *
 import json
 
+def spacing():
+    st.write("")
 
 def custom_sidebar(user):
     st.sidebar.page_link('pages/home.py', label='Home')
