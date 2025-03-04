@@ -1,32 +1,19 @@
-import streamlit as st
-import json
 import pandas as pd
-from modules.auth import get_current_user, logout, get_user
+from modules.utils import *
 
 current_user = get_current_user()
 if current_user is None:
     st.switch_page("app.py")
-    st.stop()
 
 if "profile_user" not in st.session_state:
     st.info("No profile selected, redirecting to Personal Area.")
     st.switch_page("personal")
-    st.stop()
 
 profile_user = st.session_state.profile_user
 
 st.title(f"Profile: {profile_user['username']}")
 
-st.sidebar.page_link('pages/home.py', label='Home')
-st.sidebar.page_link('pages/personal.py', label='Personal Area')
-st.sidebar.page_link('pages/search users.py', label='Search Users')
-with st.sidebar:
-    st.write("")
-    st.write("")
-    st.info(f"Logged in as: {current_user['username']}")
-    if st.button("Logout"):
-        logout()
-        st.switch_page("app.py")
+custom_sidebar(get_current_user())
 
 st.markdown("---")
 

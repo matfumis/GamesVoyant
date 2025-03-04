@@ -1,21 +1,15 @@
-import streamlit as st
-import json
 import pandas as pd
-from modules.auth import *
-from modules.database import *
-from modules.utils import custom_sidebar
+from modules.utils import *
 
 user = get_current_user()
 
 if user is None:
     st.switch_page("app.py")
-    st.stop()
 
 user = get_user_by_id(user["user_id"])
 loaded = user["saved_games"]
 if loaded and "saved_games" in loaded:
     user["saved_games"] = loaded["saved_games"]
-
 
 st.title("Personal Area")
 
@@ -104,7 +98,8 @@ else:
 
 st.markdown("---")
 
-st.write("In any moment, you can choose to reset your preferences and start over by choosing games like the first time you registered:")
+st.write(
+    "In any moment, you can choose to reset your preferences and start over by choosing games like the first time you registered:")
 if st.button("Reset preferences"):
     games_liked = json.loads(user["games_liked"])
     games_disliked = json.loads(user["games_disliked"])

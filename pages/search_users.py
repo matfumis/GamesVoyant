@@ -1,6 +1,3 @@
-import streamlit as st
-from modules.auth import *
-from modules.database import *
 from modules.utils import *
 
 st.set_page_config(layout="centered")

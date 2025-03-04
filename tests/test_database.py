@@ -13,6 +13,7 @@ from modules.database import (
     add_liked_game,
 )
 
+
 # Dummy classes to simulate a MySQL connection and cursor.
 class DummyCursor:
     def __init__(self, user_data=None):
@@ -37,6 +38,7 @@ class DummyCursor:
     def close(self):
         self.closed = True
 
+
 class DummyConnection:
     def __init__(self, user_data=None):
         self.user_data = user_data
@@ -57,12 +59,15 @@ class DummyConnection:
     def close(self):
         self.closed = True
 
+
 def dummy_connect_success(*args, **kwargs):
     # Include a user_id in the dummy data for testing.
     return DummyConnection(user_data={"username": "test", "name": "Test", "user_id": 1})
 
+
 def dummy_connect_failure(*args, **kwargs):
     raise mysql.connector.Error("Connection failed")
+
 
 # --- Tests ---
 
@@ -82,6 +87,7 @@ def test_get_connection_success(monkeypatch):
     assert conn.is_connected() is True
     conn.close()
 
+
 def test_get_connection_failure(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -97,6 +103,7 @@ def test_get_connection_failure(monkeypatch):
     # On failure, get_connection should return None.
     assert conn is None
 
+
 def test_get_user(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -110,6 +117,7 @@ def test_get_user(monkeypatch):
     user = get_user("test")
     assert user is not None
     assert user["username"] == "test"
+
 
 def test_add_user(monkeypatch):
     st.secrets = {
@@ -129,6 +137,7 @@ def test_add_user(monkeypatch):
     add_user("newuser", "hash", "New", "User", "Country", "2000-01-01")
     assert dummy_conn.commit_called is True
     assert dummy_conn.closed is True
+
 
 def test_add_liked_game(monkeypatch):
     st.secrets = {
@@ -154,6 +163,7 @@ def test_add_liked_game(monkeypatch):
     assert dummy_conn.commit_called is True
     assert dummy_conn.closed is True
 
+
 def test_search_users(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -176,6 +186,7 @@ def test_search_users(monkeypatch):
     # Expect the dummy_user to be in the results.
     assert dummy_user in results
 
+
 def test_add_follow(monkeypatch):
     st.secrets = {
         "mysql": {
@@ -195,6 +206,7 @@ def test_add_follow(monkeypatch):
     assert result is True
     assert dummy_conn.last_cursor.procname == "AddFollow"
     assert dummy_conn.last_cursor.args == [1, 2]
+
 
 def test_remove_follow(monkeypatch):
     st.secrets = {

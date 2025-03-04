@@ -4,7 +4,6 @@ from modules.auth import *
 
 if get_current_user() is not None:
     st.switch_page("pages/home.py")
-    st.stop()
 
 st.title("Authentication")
 

@@ -1,5 +1,3 @@
-import streamlit as st
-from modules.database import *
 from modules.auth import *
 import json
 
@@ -15,6 +13,7 @@ def custom_sidebar(user):
         if st.button("Logout"):
             logout()
             st.switch_page("app.py")
+
 
 def get_followed_users(user):
     followed_users_ids = json.loads(user["followed_users"])
@@ -52,17 +51,17 @@ def display_games_in_grid(df, prefix):
                     """, unsafe_allow_html=True)
 
                 app_id = game["AppID"]
-    
+
                 info_col, like_col, dislike_col, save_col = st.columns(4)
                 with info_col:
                     with st.popover("i"):
                         st.write(game["About the game"])
                 with like_col:
-                    st.button("", icon=":material/thumb_up:", key=f"{prefix}_like_{start_idx+col_idx}",
+                    st.button("", icon=":material/thumb_up:", key=f"{prefix}_like_{start_idx + col_idx}",
                               on_click=add_liked_game, args=(user['user_id'], app_id))
                 with dislike_col:
-                    st.button("", icon=":material/thumb_down:", key=f"{prefix}_dislike_{start_idx+col_idx}",
+                    st.button("", icon=":material/thumb_down:", key=f"{prefix}_dislike_{start_idx + col_idx}",
                               on_click=add_disliked_game, args=(user['user_id'], app_id))
                 with save_col:
-                    st.button("", icon=":material/add:", key=f"{prefix}_save_{start_idx+col_idx}",
+                    st.button("", icon=":material/add:", key=f"{prefix}_save_{start_idx + col_idx}",
                               on_click=add_saved_game, args=(user['user_id'], app_id))

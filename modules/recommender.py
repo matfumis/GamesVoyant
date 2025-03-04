@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-from modules.database import *
 from modules.auth import *
 import json
 

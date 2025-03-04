@@ -1,4 +1,3 @@
-from modules.auth import *
 from modules.recommender import *
 from modules.utils import *
 

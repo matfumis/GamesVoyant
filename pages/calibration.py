@@ -1,8 +1,6 @@
 import json
-import streamlit as st
 import pandas as pd
-import numpy as np
-from modules.auth import get_current_user
+from modules.auth import *
 from modules.database import *
 
 games_path = "data/clusteredDataset.pkl"
@@ -10,7 +8,6 @@ games_path = "data/clusteredDataset.pkl"
 user = get_current_user()
 if user is None:
     st.switch_page("app.py")
-    st.stop()
 
 user = get_user_by_id(user["user_id"])
 
