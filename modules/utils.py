@@ -177,3 +177,62 @@ def show_followed_users(followed_users):
                         st.session_state.profile_user = followed
                         st.switch_page("pages/user_profile.py")
 
+def load_user():
+    user = get_current_user()
+    if user is None:
+        st.switch_page("app.py")
+    return get_user(user["username"])
+
+def load_games(path: str) -> pd.DataFrame:
+    return pd.read_pickle(path)
+
+def get_games_liked(user) -> list:
+    raw = user.get("games_liked", "[]")
+    try:
+        games = json.loads(raw) if isinstance(raw, str) else list(raw)
+        return [int(x) for x in games]
+    except (json.JSONDecodeError, ValueError):
+        return []
+
+def get_top_games(df: pd.DataFrame, top_n: int) -> pd.DataFrame:
+    top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
+    return top_1000.sample(top_n)
+
+def render_game_card(game: dict, default_value: bool) -> bool:
+    if 'Header image' in game and pd.notnull(game['Header image']):
+        st.image(game["Header image"], use_container_width=True)
+        st.markdown(f"""
+            <div style="height:120px; overflow-y:auto">
+                <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
+                <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.write("No image available")
+    return st.checkbox("Select", value=default_value, key=f"game_{int(game['AppID'])}")
+
+def render_game_grid(grid_df: pd.DataFrame, games_liked: list):
+    n_columns = 5
+    selections = {}
+    for i in range(0, len(grid_df), n_columns):
+        cols = st.columns(n_columns)
+        for col, (_, game) in zip(cols, grid_df.iloc[i:i+n_columns].iterrows()):
+            with col:
+                app_id = int(game["AppID"])
+                default_value = app_id in games_liked
+                selections[app_id] = render_game_card(game, default_value)
+    return selections
+
+def process_selections(selections: dict):
+    min_selecions = 5
+    updated_games_liked = [app_id for app_id, selected in selections.items() if selected]
+    if len(updated_games_liked) < min_selecions:
+        st.error(f"Please select at least {min_selecions} games")
+        return False
+    user_id = get_current_user()['user_id']
+    for game_id in updated_games_liked:
+        add_liked_game(user_id, game_id)
+    st.success("Preferences updated successfully.")
+    st.switch_page("pages/home.py")
+    return True
+

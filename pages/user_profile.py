@@ -1,9 +1,7 @@
 import pandas as pd
 from modules.utils import *
 
-current_user = get_current_user()
-if current_user is None:
-    st.switch_page("app.py")
+user = load_user();
 
 if "profile_user" not in st.session_state:
     st.info("No profile selected, redirecting to Personal Area.")

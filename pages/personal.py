@@ -1,10 +1,7 @@
 import pandas as pd
 from modules.utils import *
 
-user = get_current_user()
-if user is None:
-    st.switch_page("app.py")
-user = get_user(user["username"])
+user = load_user();
 
 st.title("Personal Area")
 custom_sidebar(user)
