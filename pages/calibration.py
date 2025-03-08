@@ -2,18 +2,18 @@ import json
 import pandas as pd
 from modules.auth import *
 from modules.database import *
-
-games_path = "data/clusteredDataset.pkl"
+from modules.utils import *
 
 user = get_current_user()
 if user is None:
     st.switch_page("app.py")
-
+    
 user = get_user(user["username"])
 
 st.set_page_config(layout="wide")
 st.title("Choose your favorite games")
 
+games_path = "data/clusteredDataset.pkl"
 games_liked_raw = user.get("games_liked", "[]")
 try:
     games_liked = json.loads(games_liked_raw) if isinstance(games_liked_raw, str) else list(games_liked_raw)
@@ -22,9 +22,7 @@ except Exception:
     games_liked = []
 
 df = pd.read_pickle(games_path)
-
 top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
-
 n_of_games = 40
 
 if "grid_df" not in st.session_state:

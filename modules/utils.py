@@ -1,5 +1,8 @@
 from modules.auth import *
+from modules.database import *
+import pandas as pd
 import json
+
 
 def spacing():
     st.write("")
@@ -108,3 +111,69 @@ def display_games_in_grid(df, prefix):
                 with save_col:
                     st.button("", icon=":material/add:", key=f"{prefix}_save_{start_idx + col_idx}",
                               on_click=add_saved_game, args=(user['user_id'], app_id))
+
+
+def show_user_saved_games(user):
+    saved_games = user.get("saved_games", "[]")
+    if isinstance(saved_games, str):
+        saved_games = json.loads(saved_games)
+
+    games_df = pd.read_pickle("data/clusteredDataset.pkl")
+    saved_games_df = games_df[games_df["AppID"].isin(saved_games)]
+
+    user_id = user.get("user_id")
+    saved_games_list = saved_games_df.to_dict("records")
+    num_columns = 3
+
+    if not saved_games_list:
+        st.info("No saved games found.")
+    else:
+        for i in range(0, len(saved_games_list), num_columns):
+            cols = st.columns(num_columns)
+            for j, game in enumerate(saved_games_list[i:i + num_columns]):
+                with cols[j]:
+                    if game.get("Header image"):
+                        st.image(game["Header image"], use_container_width=True)
+                        st.markdown(f"""
+                            <div style="height:120px; overflow-y:auto">
+                                <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
+                                <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        app_id = game.get("AppID", None)
+                        with st.popover("Description"):
+                            st.write(game["About the game"])
+
+                        if(user_id == st.session_state.user["user_id"]):
+                            if st.button("Remove from Saved", key=f"remove_{i + j}"):
+                                success = remove_saved_game(user_id, app_id)
+                                if success:
+                                    st.success("Game removed from saved games.")
+                                    st.rerun()
+                                else:
+                                    st.error("Could not remove the game.")
+
+def show_followed_users(followed_users):
+    if not followed_users:
+        st.info("You are not following any users.")
+    else:
+        followed_users_details = []
+        for username in followed_users:
+            followed_user = get_user(username)
+            if followed_user:
+                followed_users_details.append(followed_user)
+
+        num_columns = 3
+        for i in range(0, len(followed_users_details), num_columns):
+            cols = st.columns(num_columns)
+            for j, followed in enumerate(followed_users_details[i:i + num_columns]):
+                with cols[j]:
+                    default_user_icon = f"https://robohash.org/{followed['username']}?set=set1"
+                    st.image(default_user_icon, width=150)
+                    st.markdown(f"### {followed['username']}")
+                    st.write(f"{followed['name']} {followed['surname']}")
+
+                    if st.button("View Profile", key=f"profile_{i + j}"):
+                        st.session_state.profile_user = followed
+                        st.switch_page("pages/user_profile.py")
+
