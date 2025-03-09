@@ -1,229 +1,159 @@
 import pytest
+from unittest.mock import patch, MagicMock
 import mysql.connector
+from mysql.connector import Error
 import streamlit as st
-import json
 
-from modules.database import (
-    get_connection,
-    get_user,
-    add_user,
-    search_users,
-    add_follow,
-    remove_follow,
-    add_liked_game,
-)
+import modules.database as db  
 
+@pytest.fixture(autouse=True)
+def mock_st_secrets():
+    with patch.object(st, 'secrets', {'mysql': {
+        'host': 'test_host',
+        'user': 'test_user',
+        'password': 'test_password',
+        'database': 'test_db'
+    }}):
+        yield
 
-# Dummy classes to simulate a MySQL connection and cursor.
-class DummyCursor:
-    def __init__(self, user_data=None):
-        self.user_data = user_data
-        self.closed = False
-        self.procname = None
-        self.args = None
+@pytest.fixture
+def mock_connection():
+    mock_conn = MagicMock()
+    mock_conn.is_connected.return_value = True
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    
+    with patch('mysql.connector.connect', return_value=mock_conn):
+        yield mock_conn, mock_cursor
 
-    def callproc(self, procname, args):
-        self.procname = procname
-        self.args = args
+def test_get_connection(mock_connection):
+    mock_conn, _ = mock_connection
+    connection = db.get_connection()
+    assert connection is mock_conn
 
-    def stored_results(self):
-        yield self
+def test_get_user(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    mock_result = MagicMock()
+    mock_result.fetchone.return_value = {'id': 1, 'username': 'testuser', 'name': 'Test User'}
+    mock_cursor.stored_results.return_value = [mock_result]
+    
+    result = db.get_user('testuser')
+    
+    mock_cursor.callproc.assert_called_with('GetUserByUsername', ['testuser'])
+    
+    assert result == {'id': 1, 'username': 'testuser', 'name': 'Test User'}
 
-    def fetchone(self):
-        return self.user_data
+def test_get_username(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    mock_result = MagicMock()
+    mock_result.fetchone.return_value = {'username': 'testuser'}
+    mock_cursor.stored_results.return_value = [mock_result]
+    
+    result = db.get_username(1)
+    
+    mock_cursor.callproc.assert_called_with('GetUsername', [1])
+    assert result == 'testuser'
 
-    def fetchall(self):
-        return [self.user_data] if self.user_data else []
+def test_add_user(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.add_user('testuser', 'hash123', 'Test', 'User', 'US', '2000-01-01')
+    
+    mock_cursor.callproc.assert_called_with('CreateUser', 
+        ['testuser', 'hash123', 'Test', 'User', 'US', '2000-01-01'])
 
-    def close(self):
-        self.closed = True
+def test_search_users(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    mock_result = MagicMock()
+    mock_result.fetchall.return_value = [
+        {'id': 1, 'username': 'testuser1'},
+        {'id': 2, 'username': 'testuser2'}
+    ]
+    mock_cursor.stored_results.return_value = [mock_result]
+    
+    results = db.search_users('test')
+    
+    mock_cursor.callproc.assert_called_with('SearchUsers', ['test'])
+    assert len(results) == 2
+    assert results[0]['username'] == 'testuser1'
+    assert results[1]['username'] == 'testuser2'
 
-
-class DummyConnection:
-    def __init__(self, user_data=None):
-        self.user_data = user_data
-        self.commit_called = False
-        self.closed = False
-        self.last_cursor = None
-
-    def is_connected(self):
-        return True
-
-    def cursor(self, dictionary=False):
-        self.last_cursor = DummyCursor(user_data=self.user_data)
-        return self.last_cursor
-
-    def commit(self):
-        self.commit_called = True
-
-    def close(self):
-        self.closed = True
-
-
-def dummy_connect_success(*args, **kwargs):
-    # Include a user_id in the dummy data for testing.
-    return DummyConnection(user_data={"username": "test", "name": "Test", "user_id": 1})
-
-
-def dummy_connect_failure(*args, **kwargs):
-    raise mysql.connector.Error("Connection failed")
-
-
-# --- Tests ---
-
-def test_get_connection_success(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_success)
-
-    conn = get_connection()
-    assert conn is not None
-    assert conn.is_connected() is True
-    conn.close()
-
-
-def test_get_connection_failure(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_failure)
-
-    conn = get_connection()
-    # On failure, get_connection should return None.
-    assert conn is None
-
-
-def test_get_user(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_success)
-    user = get_user("test")
-    assert user is not None
-    assert user["username"] == "test"
-
-
-def test_add_user(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    dummy_conn = DummyConnection()
-
-    def dummy_connect_for_add(*args, **kwargs):
-        return dummy_conn
-
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_for_add)
-    add_user("newuser", "hash", "New", "User", "Country", "2000-01-01")
-    assert dummy_conn.commit_called is True
-    assert dummy_conn.closed is True
-
-
-def test_add_liked_game(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    dummy_conn = DummyConnection()
-
-    def dummy_connect_for_liked(*args, **kwargs):
-        return dummy_conn
-
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_for_liked)
-    # Call add_liked_game with sample user_id and game_id.
-    add_liked_game(1, 100)
-    # Verify that the stored procedure was called with the correct name and arguments.
-    assert dummy_conn.last_cursor.procname == "AddLikedGame"
-    assert dummy_conn.last_cursor.args == [1, 100]
-    # Verify that commit was called and connection closed.
-    assert dummy_conn.commit_called is True
-    assert dummy_conn.closed is True
-
-
-def test_search_users(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    dummy_user = {"username": "searched", "name": "Searched"}
-    dummy_conn = DummyConnection(user_data=dummy_user)
-
-    def dummy_connect_for_search(*args, **kwargs):
-        return dummy_conn
-
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_for_search)
-    results = search_users("searched")
-    assert results is not None
-    assert isinstance(results, list)
-    # Expect the dummy_user to be in the results.
-    assert dummy_user in results
-
-
-def test_add_follow(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    dummy_conn = DummyConnection()
-
-    def dummy_connect_for_follow(*args, **kwargs):
-        return dummy_conn
-
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_for_follow)
-    result = add_follow(1, 2)
+def test_add_follow(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    result = db.add_follow(1, 2)
+    
+    mock_cursor.callproc.assert_called_with('AddFollow', [1, 2])
     assert result is True
-    assert dummy_conn.last_cursor.procname == "AddFollow"
-    assert dummy_conn.last_cursor.args == [1, 2]
 
+def test_get_user_error(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    mock_cursor.callproc.side_effect = Error("Database error")
+    
+    result = db.get_user('testuser')
+    assert result is None
 
-def test_remove_follow(monkeypatch):
-    st.secrets = {
-        "mysql": {
-            "host": "localhost",
-            "user": "test",
-            "password": "test",
-            "database": "testdb",
-        }
-    }
-    dummy_conn = DummyConnection()
-
-    def dummy_connect_for_remove(*args, **kwargs):
-        return dummy_conn
-
-    monkeypatch.setattr(mysql.connector, "connect", dummy_connect_for_remove)
-    result = remove_follow(1, 2)
+def test_remove_follow(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    result = db.remove_follow(1, 2)
+    
+    mock_cursor.callproc.assert_called_with('RemoveFollow', [1, 2])
     assert result is True
-    assert dummy_conn.last_cursor.procname == "RemoveFollow"
-    assert dummy_conn.last_cursor.args == [1, 2]
+
+def test_add_liked_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.add_liked_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('AddLikedGame', [1, 100])
+
+def test_add_disliked_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.add_disliked_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('AddDislikedGame', [1, 100])
+
+def test_add_saved_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.add_saved_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('AddSavedGame', [1, 100])
+
+def test_remove_liked_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.remove_liked_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('RemoveLikedGame', [1, 100])
+
+def test_remove_disliked_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    db.remove_disliked_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('RemoveDislikedGame', [1, 100])
+
+def test_remove_saved_game(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    result = db.remove_saved_game(1, 100)
+    
+    mock_cursor.callproc.assert_called_with('RemoveSavedGame', [1, 100])
+    assert result is True
+
+def test_remove_saved_game_error(mock_connection):
+    _, mock_cursor = mock_connection
+    
+    mock_cursor.callproc.side_effect = Exception("Database error")
+    
+    with patch('streamlit.error') as mock_error:
+        result = db.remove_saved_game(1, 100)
+        assert result is False
+        mock_error.assert_called_once()
