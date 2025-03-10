@@ -15,19 +15,11 @@ st.header("Games recommended to you:")
 
 spacing()
 
-if st.button("Refresh Suggestions"):
-    st.rerun()
-spacing()
-
 display_games_in_grid(pick_recommended_games(get_current_user()["username"], 12), "recommended_to_you")
 st.markdown("---")
 
 st.header("Popular games you may like")
 
-spacing()
-
-if st.button("Refresh Popular Games"):
-    st.rerun()
 spacing()
 
 display_games_in_grid(pick_popular_games(12), "popular")
@@ -41,3 +33,7 @@ if selected_user is not None:
     st.header(f"Games recommended to {selected_user}")
     display_games_in_grid(pick_recommended_games(selected_user, 12), f"recommended_to_followed_user")
     st.markdown("---")
+
+spacing()
+if st.button("Refresh Games"):
+    st.rerun()

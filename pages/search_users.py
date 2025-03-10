@@ -1,6 +1,6 @@
 from modules.utils import *
 
-st.set_page_config(layout="centered")
+st.set_page_config(layout="wide")
 current_user = get_current_user()
 if current_user is None:
     st.switch_page("app.py")

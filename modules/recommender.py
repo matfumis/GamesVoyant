@@ -42,7 +42,7 @@ def pick_recommended_games(username, n_of_games):
 
     for cluster, liked_count in cluster_counts.items():
         cluster_df = df_filtered[df_filtered['Cluster'] == cluster]
-        n_to_sample = 10 * liked_count
+        n_to_sample = min(10 * liked_count, len(cluster_df))
         sample = cluster_df.sample(n=n_to_sample)
         sample_popular_games = sample.sort_values(by="Positive", ascending=False).head(n_to_sample // 2)
         samples.append(sample_popular_games)
