@@ -13,8 +13,10 @@ user = load_user()
 st.set_page_config(layout="wide")
 st.title("Choose your favorite games")
 
+spacing()
+
 games_liked = json.loads(user["games_liked"])
-df = load_games(GAMES_PATH)
+df = get_dataframe()
 
 if "grid_df" not in st.session_state:
     st.session_state.grid_df = pick_popular_games(N_OF_GAMES)
