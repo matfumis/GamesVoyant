@@ -2,3 +2,4 @@ venv/
 /.streamlit/secrets.toml
 /data/clusteredDataset.pkl
 /data/popularity_ranking.pkl
+/data/dataset.pkl

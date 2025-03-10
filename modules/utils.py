@@ -1,12 +1,12 @@
 from modules.auth import *
 from modules.database import *
+from modules.recommender import *
 import pandas as pd
 import json
 
 
 def spacing():
     st.write("")
-
 
 def custom_sidebar(user):
     st.sidebar.page_link('pages/home.py', label='Home')
@@ -92,7 +92,7 @@ def display_games_in_grid(df, prefix):
                 st.markdown(f"""
                         <div style="height:120px; overflow-y:auto">
                             <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
-                            <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+                            <p style="color: gray; margin-top: 0rem;">Release: {int(game["Release year"])}</p>
                             <p style="color: gray; margin-top: 0rem;">Price: {game["Price"]}</p>
                         </div>
                     """, unsafe_allow_html=True)
@@ -119,7 +119,7 @@ def show_user_saved_games(user):
     if isinstance(saved_games, str):
         saved_games = json.loads(saved_games)
 
-    games_df = pd.read_pickle("data/clusteredDataset.pkl")
+    games_df = get_dataframe();
     saved_games_df = games_df[games_df["AppID"].isin(saved_games)]
 
     user_id = user.get("user_id")
@@ -138,7 +138,7 @@ def show_user_saved_games(user):
                         st.markdown(f"""
                             <div style="height:120px; overflow-y:auto">
                                 <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
-                                <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+                                <p style="color: gray; margin-top: 0rem;">Release: {int(game["Release year"])}</p>
                             </div>
                         """, unsafe_allow_html=True)
                         app_id = game.get("AppID", None)
@@ -179,6 +179,10 @@ def show_followed_users(followed_users):
                         st.session_state.profile_user = followed
                         st.switch_page("pages/user_profile.py")
 
+                    if st.button("Unfollow", key=f"unfollow_{followed['username']}"):
+                        remove_follow(get_current_user()["user_id"], followed["user_id"])
+                        st.rerun()
+
 
 def load_user():
     user = get_current_user()
@@ -186,38 +190,18 @@ def load_user():
         st.switch_page("app.py")
     return get_user(user["username"])
 
-
-def load_games(path: str) -> pd.DataFrame:
-    return pd.read_pickle(path)
-
-
-def get_games_liked(user) -> list:
-    raw = user.get("games_liked", "[]")
-    try:
-        games = json.loads(raw) if isinstance(raw, str) else list(raw)
-        return [int(x) for x in games]
-    except (json.JSONDecodeError, ValueError):
-        return []
-
-
-def get_top_games(df: pd.DataFrame, top_n: int) -> pd.DataFrame:
-    top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
-    return top_1000.sample(top_n)
-
-
 def render_game_card(game: dict, default_value: bool) -> bool:
     if 'Header image' in game and pd.notnull(game['Header image']):
         st.image(game["Header image"], use_container_width=True)
         st.markdown(f"""
             <div style="height:120px; overflow-y:auto">
                 <h4 style="margin-bottom: 0.25rem;">{game["Name"]}</h4>
-                <p style="color: gray; margin-top: 0rem;">Release: {game["Release date"]}</p>
+                <p style="color: gray; margin-top: 0rem;">Release: {int(game["Release year"])}</p>
             </div>
         """, unsafe_allow_html=True)
     else:
         st.write("No image available")
     return st.checkbox("Select", value=default_value, key=f"game_{int(game['AppID'])}")
-
 
 def render_game_grid(grid_df: pd.DataFrame, games_liked: list):
     n_columns = 5

@@ -3,9 +3,7 @@ from modules.utils import *
 
 st.set_page_config(layout="wide")
 
-user = get_current_user()
-if user is None:
-    st.switch_page("app.py")
+user = load_user()
 
 st.title("Home")
 

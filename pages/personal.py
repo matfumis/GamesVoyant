@@ -1,5 +1,6 @@
 import pandas as pd
 from modules.utils import *
+from modules.recommender import *
 
 user = load_user();
 

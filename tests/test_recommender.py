@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 MOCK_DF = pd.DataFrame({
     "AppID": [1001, 1002, 1003, 1004, 1005],
-    "Positive": range(5),
+    "Popularity_Score": range(5),
     "Cluster": [1, 2, 2, 3, 1]
 })
 

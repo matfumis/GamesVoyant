@@ -6,9 +6,8 @@ import json
 
 def get_dataframe():
     current_dir = os.path.dirname(__file__)
-    pkl_path = os.path.join(current_dir, '..', 'data', 'clusteredDataset.pkl')
+    pkl_path = os.path.join(current_dir, '..', 'data', 'dataset.pkl')
     return pd.read_pickle(pkl_path)
-
 
 def get_filtered_dataframe(df):
     user = get_current_user()
@@ -19,18 +18,15 @@ def get_filtered_dataframe(df):
         ~(df['AppID'].isin(games_liked) | df['AppID'].isin(games_disliked) | df['AppID'].isin(saved_games))]
     return df_filtered
 
-
 def pick_popular_games(n_of_games):
     df = get_filtered_dataframe(get_dataframe())
-    top_1000 = df.sort_values(by="Positive", ascending=False).head(1000)
+    top_1000 = df.sort_values(by="Popularity_Score", ascending=False).head(1000)
     return top_1000.sample(n_of_games)
-
 
 def get_cluster_counts(games_liked, df):
     liked_games_df = df[df['AppID'].isin(games_liked)]
     cluster_counts = liked_games_df['Cluster'].value_counts().to_dict()
     return cluster_counts
-
 
 def pick_recommended_games(username, n_of_games):
     df = get_dataframe()
@@ -44,7 +40,7 @@ def pick_recommended_games(username, n_of_games):
         cluster_df = df_filtered[df_filtered['Cluster'] == cluster]
         n_to_sample = min(10 * liked_count, len(cluster_df))
         sample = cluster_df.sample(n=n_to_sample)
-        sample_popular_games = sample.sort_values(by="Positive", ascending=False).head(n_to_sample // 2)
+        sample_popular_games = sample.sort_values(by="Popularity_Score", ascending=False).head(n_to_sample // 2)
         samples.append(sample_popular_games)
 
     recommended_df = pd.concat(samples)
